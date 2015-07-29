@@ -79,6 +79,5 @@ To use go vet with this package you can use the form:
 
 To use logging with your project simply:
 
-    % go get github.com/fogcreek/logging
+    % go get github.com/sasbury/logging
 
-copyright © 2015 Fog Creek Software, Inc.
