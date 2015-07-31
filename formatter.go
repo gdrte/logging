@@ -60,7 +60,7 @@ func GetFormatter(formatName LogFormat) LogFormatter {
 //Original time is provided times when the formatter has to construct a replayed message from the buffer
 type LogFormatter func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string
 
-func fullFormat(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
+var fullFormat = func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
 
 	if original != t {
 		message = fmt.Sprintf("[replayed from %v] %v", original.Format(time.StampMilli), message)
@@ -72,15 +72,15 @@ func fullFormat(level LogLevel, tags []string, message string, t time.Time, orig
 	return fmt.Sprintf("[%v] [%v] %v", t.Format(time.StampMilli), level, message)
 }
 
-func simpleFormat(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
+var simpleFormat = func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
 	return fmt.Sprintf("[%v] [%v] %v", t.Format(time.Stamp), level, message)
 }
 
-func minimalFormat(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
+var minimalFormat = func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
 	return message
 }
 
-func minimalWithTagsFormat(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
+var minimalWithTagsFormat = func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {
 	if tags != nil && len(tags) > 0 {
 		return fmt.Sprintf("[%v] %v %v", level, tags, message)
 	}

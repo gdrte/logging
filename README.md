@@ -1,3 +1,6 @@
+Logging [![Build Status](https://travis-ci.org/sasbury/logging.svg?branch=master)](https://travis-ci.org/sasbury/logging)
+=======
+
 Logging is generally broken into two pieces: what to log and where to log it.
 
 These values are often specified by named loggers with formatters that specify the format of log messages,
