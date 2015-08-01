@@ -38,7 +38,7 @@ func TestNullAppender(t *testing.T) {
 	Debug("two")
 
 	WaitForIncoming()
-	assert.Equal(t, app.Count(), 1, "Null appender should check levels appropriately")
+	assert.Equal(t, app.Count(), int64(1), "Null appender should check levels appropriately")
 }
 
 func TestAppenderCheckLevel(t *testing.T) { //not sure how to test std err without subproc so this is for coverage

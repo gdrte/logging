@@ -410,7 +410,7 @@ func TestConcurrentLogging(t *testing.T) {
 
 	waiter.Wait()
 	WaitForIncoming()
-	assert.Equal(t, memory.Count(), count*concur, "All messages should be logged.")
+	assert.Equal(t, memory.Count(), int64(count*concur), "All messages should be logged.")
 }
 
 func TestStopStartLogging(t *testing.T) {
@@ -423,18 +423,18 @@ func TestStopStartLogging(t *testing.T) {
 	Error("error")
 
 	WaitForIncoming()
-	assert.Equal(t, memory.Count(), 1, "Only messages at level ERROR should be logged.")
+	assert.Equal(t, memory.Count(), int64(1), "Only messages at level ERROR should be logged.")
 
 	PauseLogging()
 
 	Error("error")
-	assert.Equal(t, memory.Count(), 1, "Only messages at level ERROR should be logged.")
+	assert.Equal(t, memory.Count(), int64(1), "Only messages at level ERROR should be logged.")
 
 	RestartLogging()
 
 	Error("error")
 	WaitForIncoming()
-	assert.Equal(t, memory.Count(), 3, "Only messages at level ERROR should be logged.")
+	assert.Equal(t, memory.Count(), int64(3), "Only messages at level ERROR should be logged.")
 }
 
 func TestConfigWhileStoppedLogging(t *testing.T) {
@@ -447,7 +447,7 @@ func TestConfigWhileStoppedLogging(t *testing.T) {
 	Error("error")
 
 	WaitForIncoming()
-	assert.Equal(t, len(memory.GetLoggedMessages()), 1, "Only messages at level ERROR should be logged.")
+	assert.Equal(t, len(memory.GetLoggedMessages()), int(1), "Only messages at level ERROR should be logged.")
 
 	PauseLogging()
 
@@ -460,8 +460,8 @@ func TestConfigWhileStoppedLogging(t *testing.T) {
 	Error("error")
 
 	WaitForIncoming()
-	assert.Equal(t, len(memory.GetLoggedMessages()), 1, "Only old messages should be in the old log.")
-	assert.Equal(t, len(memory2.GetLoggedMessages()), 1, "Only new messages should be in the new log.")
+	assert.Equal(t, len(memory.GetLoggedMessages()), int(1), "Only old messages should be in the old log.")
+	assert.Equal(t, len(memory2.GetLoggedMessages()), int(1), "Only new messages should be in the new log.")
 }
 
 func TestErrorChannel(t *testing.T) {
@@ -491,7 +491,7 @@ func TestErrorChannel(t *testing.T) {
 	assert.Equal(t, err.Error(), "error: debug", "errors should be pushed to the channel in order.")
 
 	WaitForIncoming()
-	assert.Equal(t, errorApp.Count(), 4, "All messages should be logged.")
+	assert.Equal(t, errorApp.Count(), int64(4), "All messages should be logged.")
 }
 
 func TestErrorChannelWontBlock(t *testing.T) {
@@ -519,5 +519,5 @@ func TestErrorChannelWontBlock(t *testing.T) {
 	}
 
 	WaitForIncoming()
-	assert.Equal(t, errorApp.Count(), 4, "All messages should be logged.")
+	assert.Equal(t, errorApp.Count(), int64(4), "All messages should be logged.")
 }
