@@ -1,4 +1,4 @@
-Logging [![Build Status](https://travis-ci.org/sasbury/logging.svg?branch=master)](https://travis-ci.org/sasbury/logging)
+Logging [![Build Status](https://travis-ci.org/sasbury/logging.svg?branch=master)](https://travis-ci.org/sasbury/logging)[![GoDoc](https://godoc.org/github.com/sasbury/mini?status.svg)](https://godoc.org/github.com/sasbury/logging)
 =======
 
 Logging is generally broken into two pieces: what to log and where to log it.
