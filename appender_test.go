@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"io"
+	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 )
 
@@ -81,8 +81,9 @@ func TestWriterAppender(t *testing.T) {
 
 	SetDefaultLogLevel(DEBUG)
 
-	filepath := path.Join(os.TempDir(), "writerlogtest.txt")
-	f, _ := os.Create(filepath)
+	f, _ := ioutil.TempFile("", "logtest")
+	filepath := f.Name()
+
 	app := NewWriterAppender(f)
 	app.SetFormatter(GetFormatter(MINIMAL))
 	AddAppender(app)
