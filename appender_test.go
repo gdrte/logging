@@ -3,9 +3,6 @@ package logging
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
@@ -81,10 +78,9 @@ func TestWriterAppender(t *testing.T) {
 
 	SetDefaultLogLevel(DEBUG)
 
-	f, _ := ioutil.TempFile("", "logtest")
-	filepath := f.Name()
+	var buf bytes.Buffer
 
-	app := NewWriterAppender(f)
+	app := NewWriterAppender(&buf)
 	app.SetFormatter(GetFormatter(MINIMAL))
 	AddAppender(app)
 
@@ -95,12 +91,6 @@ func TestWriterAppender(t *testing.T) {
 
 	WaitForIncoming()
 	PauseLogging() // data race if we don't pause
-	f.Close()
-
-	buf := bytes.NewBuffer(nil)
-	f, _ = os.Open(filepath)
-	io.Copy(buf, f)
-	f.Close()
 
 	s := string(buf.Bytes())
 
