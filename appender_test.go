@@ -60,6 +60,7 @@ func TestStdErrAppender(t *testing.T) { //not sure how to test std err without s
 	SetDefaultLogLevel(INFO)
 	Info("one")
 	Debug("two")
+	WaitForIncoming()
 }
 
 func TestStdOutAppender(t *testing.T) { //not sure how to test std out without subproc so this is for coverage
@@ -71,6 +72,7 @@ func TestStdOutAppender(t *testing.T) { //not sure how to test std out without s
 	SetDefaultLogLevel(INFO)
 	Info("one")
 	Debug("two")
+	WaitForIncoming()
 }
 
 func TestWriterAppender(t *testing.T) {
@@ -96,5 +98,4 @@ func TestWriterAppender(t *testing.T) {
 
 	assert.Equal(t, s, "one\n", "File should contain a single entry for writer appender")
 	RestartLogging() //don't leave logging off
-
 }
