@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"runtime"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -271,6 +272,98 @@ func TestFormatMethodsWithTags(t *testing.T) {
 	assert.Equal(t, memory.GetLoggedMessages()[5], "[INFO] [blit blat] one 1", "messages should be formatted")
 	assert.Equal(t, memory.GetLoggedMessages()[6], "[DEBUG] [blit blat] one", "unformatted messages should be unchanged")
 	assert.Equal(t, memory.GetLoggedMessages()[7], "[DEBUG] [blit blat] one 1", "messages should be formatted")
+}
+
+func TestPanicLogging(t *testing.T) {
+	logger, memory := setup()
+	memory.SetFormatter(GetFormatter(MINIMALTAGGED))
+	logger.SetLogLevel(DEBUG)
+
+	tags := []string{"blit", "blat"}
+
+	defer func() {
+		rec := recover()
+		assert.NotNil(t, rec, "panic message")
+		assert.Equal(t, "panic", rec, "panic message")
+
+		assert.Equal(t, memory.GetLoggedMessages()[0], "[ERROR] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[1], "[ERROR] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[2], "[WARN] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[3], "[WARN] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[4], "[INFO] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[5], "[INFO] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[6], "[DEBUG] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[7], "[DEBUG] [blit blat] one 1", "messages should be formatted")
+
+		msgWithStack := strings.Split(memory.GetLoggedMessages()[8], "\n")
+
+		assert.Equal(t, msgWithStack[0], "[PANIC] [blit blat] panic", "unformatted messages should be unchanged")
+		assert.True(t, len(msgWithStack) > 1, "panic messages should include stack trace")
+		for i := 1; i < len(msgWithStack); i++ {
+			assert.Equal(t, "  ", msgWithStack[i][0:2], "every stack trace line should be indented two spaces")
+		}
+
+	}()
+
+	logger.ErrorWithTags(tags, "one")
+	logger.ErrorWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.WarnWithTags(tags, "one")
+	logger.WarnWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.InfoWithTags(tags, "one")
+	logger.InfoWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.DebugWithTags(tags, "one")
+	logger.DebugWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.PanicWithTags(tags, "panic")
+}
+
+func TestPanicFormatLogging(t *testing.T) {
+	logger, memory := setup()
+	memory.SetFormatter(GetFormatter(MINIMALTAGGED))
+	logger.SetLogLevel(DEBUG)
+
+	tags := []string{"blit", "blat"}
+
+	defer func() {
+
+		rec := recover()
+		assert.NotNil(t, rec, "panic message")
+		assert.Equal(t, "panic 1", rec, "panic message")
+
+		assert.Equal(t, memory.GetLoggedMessages()[0], "[ERROR] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[1], "[ERROR] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[2], "[WARN] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[3], "[WARN] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[4], "[INFO] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[5], "[INFO] [blit blat] one 1", "messages should be formatted")
+		assert.Equal(t, memory.GetLoggedMessages()[6], "[DEBUG] [blit blat] one", "unformatted messages should be unchanged")
+		assert.Equal(t, memory.GetLoggedMessages()[7], "[DEBUG] [blit blat] one 1", "messages should be formatted")
+
+		msgWithStack := strings.Split(memory.GetLoggedMessages()[8], "\n")
+
+		assert.Equal(t, msgWithStack[0], "[PANIC] [blit blat] panic 1", "messages should be formatted")
+		assert.True(t, len(msgWithStack) > 1, "panic messages should include stack trace")
+		for i := 1; i < len(msgWithStack); i++ {
+			assert.Equal(t, "  ", msgWithStack[i][0:2], "every stack trace line should be indented two spaces")
+		}
+	}()
+
+	logger.ErrorWithTags(tags, "one")
+	logger.ErrorWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.WarnWithTags(tags, "one")
+	logger.WarnWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.InfoWithTags(tags, "one")
+	logger.InfoWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.DebugWithTags(tags, "one")
+	logger.DebugWithTagsf(tags, "%v %v", "one", 1)
+
+	logger.PanicWithTagsf(tags, "%v %v", "panic", 1)
 }
 
 func TestFormatMethodsWithDefaultLogger(t *testing.T) {
