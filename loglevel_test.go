@@ -333,7 +333,8 @@ func BenchmarkCheckPassingTagLevelNine(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckPassingTagLevel")
 	logger.SetLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
-	tags := []string{"alpha", "beta", "gamma", "delta", "epsilon", "tau", "pi", "phi", "psi"}
+	tags := []string{"alpha", "beta", "gamma", "delta", 
+        "epsilon", "tau", "pi", "phi", "psi"}
 	logger.SetTagLevel("alpha", ERROR)
 	SetDefaultTagLogLevel("beta", ERROR)
 	for n := 0; n < b.N; n++ {
@@ -344,7 +345,8 @@ func BenchmarkCheckPassingTagLevelNine(b *testing.B) {
 func BenchmarkCheckFailingTagLevelNine(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckFailingTagLevel")
 	logger.SetLogLevel(ERROR)
-	tags := []string{"alpha", "beta", "gamma", "delta", "epsilon", "tau", "pi", "phi", "psi"}
+	tags := []string{"alpha", "beta", "gamma", "delta", 
+        "epsilon", "tau", "pi", "phi", "psi"}
 	logger.SetTagLevel("alpha", ERROR)
 	SetDefaultTagLogLevel("beta", ERROR)
 	for n := 0; n < b.N; n++ {
@@ -355,8 +357,10 @@ func BenchmarkCheckFailingTagLevelNine(b *testing.B) {
 func BenchmarkCheckFailingTagLevelEightteen(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckFailingTagLevel")
 	logger.SetLogLevel(ERROR)
-	tags := []string{"alpha", "beta", "gamma", "delta", "epsilon", "tau", "pi", "phi", "psi",
-		"zeta", "omega", "upsilon", "one", "two", "three", "four", "five", "six",
+	tags := []string{"alpha", "beta", "gamma",
+        "delta", "epsilon", "tau", "pi", "phi", "psi",
+		"zeta", "omega", "upsilon", "one", "two", "three",
+        "four", "five", "six",
 	}
 	logger.SetTagLevel("alpha", ERROR)
 	SetDefaultTagLogLevel("beta", ERROR)
@@ -368,8 +372,10 @@ func BenchmarkCheckFailingTagLevelEightteen(b *testing.B) {
 func BenchmarkTagRangeList(b *testing.B) {
 	theMap := make(map[string]string, 0)
 	theMap["alpha"] = "alpha"
-	tags := []string{"alpha", "beta", "gamma", "delta", "epsilon", "tau", "pi", "phi", "psi",
-		"zeta", "omega", "upsilon", "one", "two", "three", "four", "five", "six",
+	tags := []string{"alpha", "beta", "gamma", "delta", 
+        "epsilon", "tau", "pi", "phi", "psi",
+		"zeta", "omega", "upsilon", "one", "two", "three", 
+        "four", "five", "six",
 	}
 	for n := 0; n < b.N; n++ {
 		for _, tag := range tags {
