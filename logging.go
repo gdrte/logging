@@ -121,7 +121,7 @@ type LogRecord struct {
 type LoggerImpl struct {
 	name      string
 	level     LogLevel
-	tagLevels map[string]LogLevel
+	tagLevels tagList
 	buffer    *ring.Ring
 }
 
@@ -351,10 +351,8 @@ func (logger *LoggerImpl) SetLogLevel(l LogLevel) {
 //level for a logger allowing specific log messages to slip through and be appended to the logs
 func (logger *LoggerImpl) SetTagLevel(tag string, l LogLevel) {
 	logMutex.Lock()
-	if logger.tagLevels == nil {
-		logger.tagLevels = make(map[string]LogLevel)
-	}
-	logger.tagLevels[tag] = l
+    logger.tagLevels = logger.tagLevels.setTagLevel(tag,l)
+    
 	wait := new(sync.WaitGroup)
 	if logger == defaultLogger {
 		flushAllLoggers(wait)
@@ -415,20 +413,8 @@ func logError(err error) {
 /* Should be called inside the logging lock */
 func (logger *LoggerImpl) checkTagLevel(l LogLevel, tags []string) bool {
 
-	for _, tag := range tags {
-
-		if logger.tagLevels != nil {
-			if tagLevel, ok := logger.tagLevels[tag]; ok && tagLevel <= l {
-				return true
-			}
-		}
-
-		if logger != defaultLogger && defaultLogger.tagLevels != nil {
-			if tagLevel, ok := defaultLogger.tagLevels[tag]; ok && tagLevel <= l {
-				return true
-			}
-		}
-	}
+    return logger.tagLevels.checkTagLevel(l, tags) ||
+            (logger != defaultLogger && defaultLogger.tagLevels.checkTagLevel(l, tags))
 
 	return false
 }
@@ -450,9 +436,8 @@ func (logger *LoggerImpl) CheckLevel(l LogLevel, tags []string) bool {
 //requires the lock be acquired
 func (logger *LoggerImpl) checkLevelWithTags(l LogLevel, tags []string) bool {
 
-	if (logger.tagLevels != nil || defaultLogger.tagLevels != nil) && tags != nil {
-		matchTag := logger.checkTagLevel(l, tags)
-		if matchTag {
+	if tags != nil {
+		if logger.checkTagLevel(l, tags) {
 			return true //otherwise check the general level
 		}
 	}

@@ -272,6 +272,7 @@ func TestLevelOveridesTagLevel(t *testing.T) {
 
 func BenchmarkCheckPassingLogLevel(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckPassingLogLevel")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	for n := 0; n < b.N; n++ {
 		logger.CheckLevel(ERROR, nil)
@@ -280,6 +281,7 @@ func BenchmarkCheckPassingLogLevel(b *testing.B) {
 
 func BenchmarkCheckFailingLogLevel(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckFailingLogLevel")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	for n := 0; n < b.N; n++ {
 		logger.CheckLevel(WARN, nil)
@@ -288,7 +290,7 @@ func BenchmarkCheckFailingLogLevel(b *testing.B) {
 
 func BenchmarkCheckPassingTagLevel(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckPassingTagLevel")
-	logger.SetLogLevel(ERROR)
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"tag2"}
 	logger.SetTagLevel("tag2", ERROR)
@@ -299,6 +301,7 @@ func BenchmarkCheckPassingTagLevel(b *testing.B) {
 
 func BenchmarkCheckFailingTagLevel(b *testing.B) {
 	logger := GetLogger("BenchmarkCheckFailingTagLevel")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"tag2"}
 	logger.SetTagLevel("tag2", ERROR)
@@ -308,8 +311,8 @@ func BenchmarkCheckFailingTagLevel(b *testing.B) {
 }
 
 func BenchmarkCheckPassingTagLevelThree(b *testing.B) {
-	logger := GetLogger("BenchmarkCheckPassingTagLevel")
-	logger.SetLogLevel(ERROR)
+	logger := GetLogger("BenchmarkCheckPassingTagLevel3")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"alpha", "beta", "phi"}
 	logger.SetTagLevel("alpha", ERROR)
@@ -319,8 +322,21 @@ func BenchmarkCheckPassingTagLevelThree(b *testing.B) {
 	}
 }
 
+func BenchmarkCheckPassingTagLevelThreeUnsorted(b *testing.B) {
+	logger := GetLogger("BenchmarkCheckPassingTagLevel3u")
+	SetDefaultLogLevel(ERROR)
+	logger.SetLogLevel(ERROR)
+	tags := []string{"phi", "beta", "alpha"}
+	logger.SetTagLevel("alpha", ERROR)
+	SetDefaultTagLogLevel("beta", ERROR)
+	for n := 0; n < b.N; n++ {
+		logger.CheckLevel(ERROR, tags)
+	}
+}
+
 func BenchmarkCheckFailingTagLevelThree(b *testing.B) {
-	logger := GetLogger("BenchmarkCheckFailingTagLevel")
+	logger := GetLogger("BenchmarkCheckFailingTagLevel3")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"alpha", "beta", "phi"}
 	logger.SetTagLevel("alpha", ERROR)
@@ -331,8 +347,8 @@ func BenchmarkCheckFailingTagLevelThree(b *testing.B) {
 }
 
 func BenchmarkCheckPassingTagLevelNine(b *testing.B) {
-	logger := GetLogger("BenchmarkCheckPassingTagLevel")
-	logger.SetLogLevel(ERROR)
+	logger := GetLogger("BenchmarkCheckPassingTagLevel9")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"alpha", "beta", "gamma", "delta", 
         "epsilon", "tau", "pi", "phi", "psi"}
@@ -344,7 +360,8 @@ func BenchmarkCheckPassingTagLevelNine(b *testing.B) {
 }
 
 func BenchmarkCheckFailingTagLevelNine(b *testing.B) {
-	logger := GetLogger("BenchmarkCheckFailingTagLevel")
+	logger := GetLogger("BenchmarkCheckFailingTagLevel9")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"alpha", "beta", "gamma", "delta", 
         "epsilon", "tau", "pi", "phi", "psi"}
@@ -355,8 +372,51 @@ func BenchmarkCheckFailingTagLevelNine(b *testing.B) {
 	}
 }
 
+func BenchmarkCheckPassingTagLevelNineByNine(b *testing.B) {
+	logger := GetLogger("BenchmarkCheckPassingTagLevel99")
+	SetDefaultLogLevel(ERROR)
+	logger.SetLogLevel(ERROR)
+	tags := []string{"alpha", "beta", "gamma", "delta", 
+        "epsilon", "tau", "pi", "phi", "psi"}
+	logger.SetTagLevel("alpha", ERROR)
+	logger.SetTagLevel("beta1", ERROR)
+	logger.SetTagLevel("gamma1", ERROR)
+	logger.SetTagLevel("delta1", ERROR)
+	logger.SetTagLevel("epsilon1", ERROR)
+	logger.SetTagLevel("tau1", ERROR)
+	logger.SetTagLevel("pi1", ERROR)
+	logger.SetTagLevel("phi1", ERROR)
+	logger.SetTagLevel("psi1", ERROR)
+	SetDefaultTagLogLevel("beta", ERROR)
+	for n := 0; n < b.N; n++ {
+		logger.CheckLevel(ERROR, tags)
+	}
+}
+
+func BenchmarkCheckFailingTagLevelNineByNine(b *testing.B) {
+	logger := GetLogger("BenchmarkCheckFailingTagLevel99")
+	SetDefaultLogLevel(ERROR)
+	logger.SetLogLevel(ERROR)
+	tags := []string{"alpha", "beta", "gamma", "delta", 
+        "epsilon", "tau", "pi", "phi", "psi"}
+	logger.SetTagLevel("alpha", ERROR)
+	logger.SetTagLevel("beta1", ERROR)
+	logger.SetTagLevel("gamma1", ERROR)
+	logger.SetTagLevel("delta1", ERROR)
+	logger.SetTagLevel("epsilon1", ERROR)
+	logger.SetTagLevel("tau1", ERROR)
+	logger.SetTagLevel("pi1", ERROR)
+	logger.SetTagLevel("phi1", ERROR)
+	logger.SetTagLevel("psi1", ERROR)
+	SetDefaultTagLogLevel("beta", ERROR)
+	for n := 0; n < b.N; n++ {
+		logger.CheckLevel(WARN, tags)
+	}
+}
+
 func BenchmarkCheckFailingTagLevelEightteen(b *testing.B) {
-	logger := GetLogger("BenchmarkCheckFailingTagLevel")
+	logger := GetLogger("BenchmarkCheckFailingTagLevel18")
+	SetDefaultLogLevel(ERROR)
 	logger.SetLogLevel(ERROR)
 	tags := []string{"alpha", "beta", "gamma",
         "delta", "epsilon", "tau", "pi", "phi", "psi",
@@ -370,33 +430,26 @@ func BenchmarkCheckFailingTagLevelEightteen(b *testing.B) {
 	}
 }
 
-func BenchmarkTagRangeList(b *testing.B) {
-	theMap := make(map[string]string, 0)
-	theMap["alpha"] = "alpha"
-	tags := []string{"alpha", "beta", "gamma", "delta", 
+func BenchmarkTagList(b *testing.B) {
+	one := []string{"alpha", "beta", "gamma", "delta", 
         "epsilon", "tau", "pi", "phi", "psi",
 		"zeta", "omega", "upsilon", "one", "two", "three", 
         "four", "five", "six",
 	}
+
+    two := tagList{
+        tagLevel{
+            tag: "tau", 
+            level: DEBUG,
+        },
+        tagLevel{
+            tag: "upsilon",
+            level: WARN,
+        },
+    }
+
 	for n := 0; n < b.N; n++ {
-		for _, tag := range tags {
-			_, _ = theMap[tag]
-		}
+        two.checkTagLevel(WARN, one)
 	}
 }
 
-func BenchmarkTagMapLookup(b *testing.B) {
-	theMap := make(map[string]string, 0)
-	theMap["alpha"] = "a"
-	for n := 0; n < b.N; n++ {
-		_, _ = theMap["alpha"]
-	}
-}
-
-func BenchmarkTagFailedMapLookup(b *testing.B) {
-	theMap := make(map[string]string, 0)
-	theMap["beta"] = "b"
-	for n := 0; n < b.N; n++ {
-		_, _ = theMap["a"]
-	}
-}
