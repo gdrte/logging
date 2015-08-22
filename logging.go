@@ -1,14 +1,14 @@
-//Package logging for Go takes a slightly different approach based on our experience with real world logging.
+// Package logging for Go takes a slightly different approach based on our experience with real world logging.
 //
-//A default logger provides an easy path to logging.
-//Named loggers provide a way to set levels by package.
-//Tags provide a way to set levels across concepts, perpendicular to logger names.
-//Default log levels and default tag levels are independent of the default logger.
-//All loggers share the same appenders - but appenders can be associated with a level which is unrelated to tags.
-//Each logger has an optional buffer, that will be flushd whenever its level/tags change.
-//This buffer contains un-passed messages. So that it is possible to configure the system to capture messages and replay them later.
-//Replayed messages are tagged and have a double time stamp.
-//A default appender is initialized to send log messages to stderr.
+// A default logger provides an easy path to logging.
+// Named loggers provide a way to set levels by package.
+// Tags provide a way to set levels across concepts, perpendicular to logger names.
+// Default log levels and default tag levels are independent of the default logger.
+// All loggers share the same appenders - but appenders can be associated with a level which is unrelated to tags.
+// Each logger has an optional buffer, that will be flushd whenever its level/tags change.
+// This buffer contains un-passed messages. So that it is possible to configure the system to capture messages and replay them later.
+// Replayed messages are tagged and have a double time stamp.
+// A default appender is initialized to send log messages to stderr.
 package logging
 
 import (
@@ -21,8 +21,8 @@ import (
 	"strings"
 )
 
-//Logger is the interface for the objects that are the target of logging messages. Logging methods
-//imply a level. For example, Info() implies a level of LogLevel.INFO.
+// Logger is the interface for the objects that are the target of logging messages. Logging methods
+// imply a level. For example, Info() implies a level of LogLevel.INFO.
 type Logger interface {
 	PanicWithTagsf(tags []string, fmt string, args ...interface{})
 	PanicWithTags(tags []string, args ...interface{})
@@ -65,19 +65,19 @@ const (
 	running
 )
 
-//logMutex is a global lock for protecting all global state in package
+// logMutex is a global lock for protecting all global state in package.
 var logMutex = new(sync.RWMutex)
 
-//defaultLogger is provided for most logging situations
+// defaultLogger is provided for most logging situations.
 var defaultLogger *LoggerImpl
 
-//The default format is used to determine how appenders without a custom format log their messages
+// The default format is used to determine how appenders without a custom format log their messages.
 var defaultFormatter = GetFormatter(FULL)
 
-//Loggers share the appenders
+// Loggers share the appenders.
 var appenders = make([]LogAppender, 0)
 
-//The package maintains a map of named loggers
+// The package maintains a map of named loggers.
 var loggers = make(map[string]*LoggerImpl)
 var incomingChannel = make(chan *LogRecord, 2048)
 var stateChannel = make(chan int, 0)
@@ -99,25 +99,25 @@ func init() {
 	go processIncoming()
 }
 
-//LogRecord is the type used in the logging buffer
+// LogRecord is the type used in the logging buffer.
 type LogRecord struct {
-	//Time is the time that the log record is being appended, can be
-	//different from Original if the record was buffered
+	// Time is the time that the log record is being appended, can be
+	// different from Original if the record was buffered.
 	Time time.Time
-	//Original is the original time for the log record
+	// Original is the original time for the log record.
 	Original time.Time
-	//Level is the level the record was logged at
+	// Level is the level the record was logged at.
 	Level LogLevel
-	//Tags are the custom tags assigned to the record when it was logged
+	// Tags are the custom tags assigned to the record when it was logged.
 	Tags []string
-	//Message is the actual log message
+	// Message is the actual log message.
 	Message string
-	//Logger is the logger associated with this log record, if any
+	// Logger is the logger associated with this log record, if any.
 	Logger *LoggerImpl
 }
 
-//LoggerImpl stores the data for a logger.
-//A Logger maintains its own level, tag levels and buffer. Each logger is named.
+// LoggerImpl stores the data for a logger.
+// A Logger maintains its own level, tag levels and buffer. Each logger is named.
 type LoggerImpl struct {
 	name      string
 	level     LogLevel
@@ -125,19 +125,19 @@ type LoggerImpl struct {
 	buffer    *ring.Ring
 }
 
-//PauseLogging stops all logging from being processed.
-//Pause will not wait for all log messages to be processed
+// PauseLogging stops all logging from being processed.
+// Pause will not wait for all log messages to be processed.
 func PauseLogging() {
 	stateChannel <- paused
 }
 
-//RestartLogging starts messages logging again
+// RestartLogging starts messages logging again.
 func RestartLogging() {
 	stateChannel <- running
 }
 
-//StopLogging can only be called once, and completely stops the logging
-//process
+// StopLogging can only be called once, and completely stops the logging
+// process.
 func StopLogging() {
 	stateChannel <- stopped
 	waiter.Wait()
@@ -154,7 +154,7 @@ loop:
 			case stopped:
 				waiter.Done()
 				break loop
-			case paused: //run a sub-loop looking for a state change
+			case paused: // run a sub-loop looking for a state change
 			subloop:
 				for {
 					select {
@@ -175,11 +175,11 @@ loop:
 	}
 }
 
-//WaitForIncoming should be used in tests or system shutdowns to make sure
-//that all of the log messages pushed into the logging channel are processed
-//and appended appropriately.
+// WaitForIncoming should be used in tests or system shutdowns to make sure
+// that all of the log messages pushed into the logging channel are processed
+// and appended appropriately.
 func WaitForIncoming() {
-	runtime.Gosched() //start by giving the other go routines a chance to run
+	runtime.Gosched() // start by giving the other go routines a chance to run
 	for {
 		if atomic.LoadUint64(&processed) != atomic.LoadUint64(&logged) {
 			time.Sleep(2 * time.Millisecond)
@@ -189,9 +189,9 @@ func WaitForIncoming() {
 	}
 }
 
-//Waits for the specific log to be processed
+// Waits for the specific log to be processed.
 func WaitForProcessed(logNum uint64) {
-	runtime.Gosched() //start by giving the other go routines a chance to run
+	runtime.Gosched() // start by giving the other go routines a chance to run
 	for {
 		if logNum != atomic.LoadUint64(&processed) {
 			time.Sleep(1 * time.Millisecond)
@@ -201,25 +201,25 @@ func WaitForProcessed(logNum uint64) {
 	}
 }
 
-//CaptureLoggingErrors allows the logging user to provide a channel
-//for capturing logging errors. Any error during the logging process, like an
-//appender failing will be sent to this channel.
-//By default there is no error channel.
-//Logging will not block when writting to the error channel so make sure the
-//channel is big enough to capture errors
+// CaptureLoggingErrors allows the logging user to provide a channel
+// for capturing logging errors. Any error during the logging process, like an
+// appender failing will be sent to this channel.
+// By default there is no error channel.
+// Logging will not block when writting to the error channel so make sure the
+// channel is big enough to capture errors
 func CaptureLoggingErrors(errs chan<- error) {
 	logMutex.Lock()
 	logErrors = errs
 	logMutex.Unlock()
 }
 
-//DefaultLogger returns a logger that can be used when a named logger isn't required
+// DefaultLogger returns a logger that can be used when a named logger isn't required.
 func DefaultLogger() Logger {
 	return defaultLogger
 }
 
-//GetLogger returns a named logger, creating it if necessary. The logger will have the default settings.
-//By default the logger will use the DefaultLoggers level and tag levels
+// GetLogger returns a named logger, creating it if necessary. The logger will have the default settings.
+// By default the logger will use the DefaultLoggers level and tag levels.
 func GetLogger(name string) Logger {
 	logMutex.RLock()
 	logger := loggers[name]
@@ -238,37 +238,37 @@ func GetLogger(name string) Logger {
 	return logger
 }
 
-//EnableVerboseLogging by default verbose logging is ignored, use this
-//method to allow verbose logging
+// EnableVerboseLogging by default verbose logging is ignored, use this
+// method to allow verbose logging.
 func EnableVerboseLogging() {
 	atomic.StoreInt32(&enableVerbose, 1)
 }
 
-//DisableVerboseLogging by default verbose logging is ignored, use this
-//method to turn off verbose logging if you have enabled it
+// DisableVerboseLogging by default verbose logging is ignored, use this
+// method to turn off verbose logging if you have enabled it.
 func DisableVerboseLogging() {
 	atomic.StoreInt32(&enableVerbose, 0)
 }
 
-//SetDefaultLogLevel sets the default loggers log level, flushes all buffers in case messages are cleared for logging
+// SetDefaultLogLevel sets the default loggers log level, flushes all buffers in case messages are cleared for logging.
 func SetDefaultLogLevel(l LogLevel) {
 	defaultLogger.SetLogLevel(l)
 }
 
-//SetDefaultTagLogLevel sets the default loggers level for the specified tag, flushes all buffers in case messages are cleared for logging..
+// SetDefaultTagLogLevel sets the default loggers level for the specified tag, flushes all buffers in case messages are cleared for logging..
 func SetDefaultTagLogLevel(tag string, l LogLevel) {
 	defaultLogger.SetTagLevel(tag, l)
 }
 
-//SetDefaultFormatter sets the default formatter used by appenders that don't have their own
+// SetDefaultFormatter sets the default formatter used by appenders that don't have their own.
 func SetDefaultFormatter(formatter LogFormatter) {
 	logMutex.Lock()
 	defaultFormatter = formatter
 	logMutex.Unlock()
 }
 
-//SetDefaultBufferLength sets the buffer length for the default logger, new loggers will use this length.
-//Existing loggers with buffers are not affected, those with buffers are not effected.
+// SetDefaultBufferLength sets the buffer length for the default logger, new loggers will use this length.
+// Existing loggers with buffers are not affected, those with buffers are not effected.
 func SetDefaultBufferLength(length int) {
 
 	logMutex.Lock()
@@ -283,15 +283,15 @@ func SetDefaultBufferLength(length int) {
 	logMutex.Unlock()
 }
 
-//AddAppender adds a new global appender for use by all loggers. Levels can be used to restrict logging to specific appenders.
+// AddAppender adds a new global appender for use by all loggers. Levels can be used to restrict logging to specific appenders.
 func AddAppender(appender LogAppender) {
 	logMutex.Lock()
 	appenders = append(appenders, appender)
 	logMutex.Unlock()
 }
 
-//ClearAppenders removes all of the global appenders, mainly used during configuration.
-//Will pause and restart logging
+// ClearAppenders removes all of the global appenders, mainly used during configuration.
+// Will pause and restart logging.
 func ClearAppenders() {
 	PauseLogging()
 	logMutex.Lock()
@@ -305,9 +305,9 @@ func ClearAppenders() {
 	RestartLogging()
 }
 
-//ClearLoggers is provided so that an application can
-//completely reset its logging configuration, for example
-//on a SIGHUP
+// ClearLoggers is provided so that an application can
+// completely reset its logging configuration, for example
+// on a SIGHUP.
 func ClearLoggers() {
 	PauseLogging()
 	logMutex.Lock()
@@ -327,10 +327,10 @@ func AddTag(tags []string, newTag string) []string {
 	return newTags
 }
 
-//SetLogLevel sets the level of messages allowed for a logger. This level can be
-//overriden for specific tags using SetTagLevel. Changing the level for a Logger
-//flushes its buffer in case messages are now free to be logged. This means that
-//buffered messages might be printed out of order, but will be formatted to indicate this.
+// SetLogLevel sets the level of messages allowed for a logger. This level can be
+// overriden for specific tags using SetTagLevel. Changing the level for a Logger
+// flushes its buffer in case messages are now free to be logged. This means that
+// buffered messages might be printed out of order, but will be formatted to indicate this.
 func (logger *LoggerImpl) SetLogLevel(l LogLevel) {
 	logMutex.Lock()
 	logger.level = l
@@ -347,8 +347,8 @@ func (logger *LoggerImpl) SetLogLevel(l LogLevel) {
 	wait.Wait()
 }
 
-//SetTagLevel assigns a log level to a specific tag. This level can override the general
-//level for a logger allowing specific log messages to slip through and be appended to the logs
+// SetTagLevel assigns a log level to a specific tag. This level can override the general
+// level for a logger allowing specific log messages to slip through and be appended to the logs.
 func (logger *LoggerImpl) SetTagLevel(tag string, l LogLevel) {
 	logMutex.Lock()
     logger.tagLevels = logger.tagLevels.setTagLevel(tag,l)
@@ -364,7 +364,7 @@ func (logger *LoggerImpl) SetTagLevel(tag string, l LogLevel) {
 	wait.Wait()
 }
 
-//SetBufferLength clears the buffer and creates a new one of the specified length.
+// SetBufferLength clears the buffer and creates a new one of the specified length.
 func (logger *LoggerImpl) SetBufferLength(length int) {
 	logMutex.Lock()
 
@@ -373,7 +373,7 @@ func (logger *LoggerImpl) SetBufferLength(length int) {
 	logMutex.Unlock()
 }
 
-//expects the lock
+// expects the lock.
 func (logger *LoggerImpl) setBufferLengthImpl(length int) {
 
 	if length == 0 {
@@ -383,7 +383,7 @@ func (logger *LoggerImpl) setBufferLengthImpl(length int) {
 	}
 }
 
-//NewLogRecord creates a log record object
+// NewLogRecord creates a log record object.
 func NewLogRecord(logger *LoggerImpl, level LogLevel, tags []string, message string, time time.Time, original time.Time) *LogRecord {
 	record := new(LogRecord)
 	record.Logger = logger
@@ -395,22 +395,22 @@ func NewLogRecord(logger *LoggerImpl, level LogLevel, tags []string, message str
 	return record
 }
 
-//should be called inside the logging lock,
-//puts the error on the logging error channel if one is set
+// should be called inside the logging lock,
+// puts the error on the logging error channel if one is set.
 func logError(err error) {
 	if err != nil && logErrors != nil {
 
 		select {
 		case logErrors <- err:
-			//write the error
+			// write the error
 		default:
-			//don't write or block
+			// don't write or block
 		}
 	}
 }
 
-/* Check the tags for this logger, or the defaults, if any pass, then we pass */
-/* Should be called inside the logging lock */
+// Check the tags for this logger, or the defaults, if any pass, then we pass.
+// Should be called inside the logging lock.
 func (logger *LoggerImpl) checkTagLevel(l LogLevel, tags []string) bool {
 
     return logger.tagLevels.checkTagLevel(l, tags) ||
@@ -419,12 +419,12 @@ func (logger *LoggerImpl) checkTagLevel(l LogLevel, tags []string) bool {
 	return false
 }
 
-//CheckLevel tests the default logger for its permissions
+// CheckLevel tests the default logger for its permissions.
 func CheckLevel(l LogLevel, tags []string) bool {
 	return defaultLogger.CheckLevel(l, tags)
 }
 
-//CheckLevel checks tags, then check the level on this , or the default level
+// CheckLevel checks tags, then check the level on this , or the default level.
 func (logger *LoggerImpl) CheckLevel(l LogLevel, tags []string) bool {
 
 	logMutex.RLock()
@@ -433,12 +433,12 @@ func (logger *LoggerImpl) CheckLevel(l LogLevel, tags []string) bool {
 	return logger.checkLevelWithTags(l, tags)
 }
 
-//requires the lock be acquired
+// requires the lock be acquired.
 func (logger *LoggerImpl) checkLevelWithTags(l LogLevel, tags []string) bool {
 
 	if tags != nil {
 		if logger.checkTagLevel(l, tags) {
-			return true //otherwise check the general level
+			return true // otherwise check the general level
 		}
 	}
 
@@ -449,7 +449,7 @@ func (logger *LoggerImpl) checkLevelWithTags(l LogLevel, tags []string) bool {
 	return defaultLogger.level <= l
 }
 
-//flushAllLoggers expects the logging lock to be held by the caller
+// flushAllLoggers expects the logging lock to be held by the caller.
 func flushAllLoggers(wait *sync.WaitGroup) {
 	wait.Add(len(loggers) + 1)
 	for _, val := range loggers {
@@ -458,7 +458,7 @@ func flushAllLoggers(wait *sync.WaitGroup) {
 	defaultLogger.flushBuffer(wait)
 }
 
-//should be called witin the lock
+// should be called witin the lock
 func logToAppenders(record *LogRecord) {
 	for _, appender := range appenders {
 		err := appender.Log(record)
@@ -482,9 +482,9 @@ func processLogRecord(record *LogRecord) {
 	atomic.AddUint64(&processed, 1)
 }
 
-//flushBuffer expects the logging lock to be held, and does not take the lock
-//should call done on the wait group when the buffer is flushed
-//does not 1 to the waitgroup
+// flushBuffer expects the logging lock to be held, and does not take the lock.
+// should call done on the wait group when the buffer is flushed.
+// does not 1 to the waitgroup.
 func (logger *LoggerImpl) flushBuffer(wait *sync.WaitGroup) {
 	if logger.buffer != nil {
 		now := time.Now()
@@ -538,7 +538,7 @@ func (logger *LoggerImpl) logwithformat(level LogLevel, tags []string, format st
 	logNum := atomic.AddUint64(&logged, 1)
 	incomingChannel <- logRecord
 
-	//return the logged number to track if it was processed
+	// return the logged number to track if it was processed
 	return logNum
 }
 
@@ -546,14 +546,14 @@ func (logger *LoggerImpl) log(level LogLevel, tags []string, args ...interface{}
 	return logger.logwithformat(level, tags, "", args...)
 }
 
-//PanicWithTagsf logs a PANIC level message with the provided tags and formatted string.
+// PanicWithTagsf logs a PANIC level message with the provided tags and formatted string.
 func (logger *LoggerImpl) PanicWithTagsf(tags []string, format string, args ...interface{}) {
 	logNum := logger.logwithformat(PANIC, tags, format, args...)
 
-	//ensure the panic message we just logged gets processed
+	// ensure the panic message we just logged gets processed
 	WaitForProcessed(logNum)
 
-	//flush all logs before panicking
+	// flush all logs before panicking
 	logMutex.Lock()
 	wait := new(sync.WaitGroup)
 	if logger == defaultLogger {
@@ -565,7 +565,7 @@ func (logger *LoggerImpl) PanicWithTagsf(tags []string, format string, args ...i
 	logMutex.Unlock()
 	wait.Wait()
 
-	//continue with the panic
+	// continue with the panic
 	if format == "" {
 		panic(fmt.Sprint(args...))
 	} else {
@@ -573,14 +573,14 @@ func (logger *LoggerImpl) PanicWithTagsf(tags []string, format string, args ...i
 	}
 }
 
-//PanicWithTags logs a PANIC level message with the provided tags and provided arguments joined into a string.
+// PanicWithTags logs a PANIC level message with the provided tags and provided arguments joined into a string.
 func (logger *LoggerImpl) PanicWithTags(tags []string, args ...interface{}) {
 	logNum := logger.log(PANIC, tags, args...)
 
-	//ensure the panic message we just logged gets processed
+	// ensure the panic message we just logged gets processed
 	WaitForProcessed(logNum)
 
-	//flush all logs before panicking
+	// flush all logs before panicking
 	logMutex.Lock()
 	wait := new(sync.WaitGroup)
 	if logger == defaultLogger {
@@ -592,18 +592,18 @@ func (logger *LoggerImpl) PanicWithTags(tags []string, args ...interface{}) {
 	logMutex.Unlock()
 	wait.Wait()
 
-	//continue with panic
+	// continue with panic
 	panic(fmt.Sprint(args...))
 }
 
-//Panicf logs a PANIC level message with the no tags and formatted string.
+// Panicf logs a PANIC level message with the no tags and formatted string.
 func (logger *LoggerImpl) Panicf(format string, args ...interface{}) {
 	logNum := logger.logwithformat(PANIC, nil, format, args...)
 
-	//ensure the panic message we just logged gets processed
+	// ensure the panic message we just logged gets processed
 	WaitForProcessed(logNum)
 
-	//flush all logs before panicking
+	// flush all logs before panicking
 	logMutex.Lock()
 	wait := new(sync.WaitGroup)
 	if logger == defaultLogger {
@@ -615,7 +615,7 @@ func (logger *LoggerImpl) Panicf(format string, args ...interface{}) {
 	logMutex.Unlock()
 	wait.Wait()
 
-	//continue with the panic
+	// continue with the panic
 	if format == "" {
 		panic(fmt.Sprint(args...))
 	} else {
@@ -623,14 +623,14 @@ func (logger *LoggerImpl) Panicf(format string, args ...interface{}) {
 	}
 }
 
-//Panic logs a PANIC level message with no tags and provided arguments joined into a string.
+// Panic logs a PANIC level message with no tags and provided arguments joined into a string.
 func (logger *LoggerImpl) Panic(args ...interface{}) {
 	logNum := logger.log(PANIC, nil, args...)
 
-	//ensure the panic message we just logged gets processed
+	// ensure the panic message we just logged gets processed
 	WaitForProcessed(logNum)
 
-	//flush all logs before panicking
+	// flush all logs before panicking
 	logMutex.Lock()
 	wait := new(sync.WaitGroup)
 	if logger == defaultLogger {
@@ -642,190 +642,190 @@ func (logger *LoggerImpl) Panic(args ...interface{}) {
 	logMutex.Unlock()
 	wait.Wait()
 
-	//continue with the panic
+	// continue with the panic
 	panic(fmt.Sprint(args...))
 }
 
-//ErrorWithTagsf logs an ERROR level message with the provided tags and formatted string.
+// ErrorWithTagsf logs an ERROR level message with the provided tags and formatted string.
 func (logger *LoggerImpl) ErrorWithTagsf(tags []string, fmt string, args ...interface{}) {
 	logger.logwithformat(ERROR, tags, fmt, args...)
 }
 
-//ErrorWithTags logs an ERROR level message with the provided tags and provided arguments joined into a string.
+// ErrorWithTags logs an ERROR level message with the provided tags and provided arguments joined into a string.
 func (logger *LoggerImpl) ErrorWithTags(tags []string, args ...interface{}) {
 	logger.log(ERROR, tags, args...)
 }
 
-//Errorf logs an ERROR level message with the no tags and formatted string.
+// Errorf logs an ERROR level message with the no tags and formatted string.
 func (logger *LoggerImpl) Errorf(fmt string, args ...interface{}) {
 	logger.logwithformat(ERROR, nil, fmt, args...)
 }
 
-//Error logs an ERROR level message with no tags and provided arguments joined into a string.
+// Error logs an ERROR level message with no tags and provided arguments joined into a string.
 func (logger *LoggerImpl) Error(args ...interface{}) {
 	logger.log(ERROR, nil, args...)
 }
 
-//WarnWithTagsf logs an WARN level message with the provided tags and formatted string.
+// WarnWithTagsf logs an WARN level message with the provided tags and formatted string.
 func (logger *LoggerImpl) WarnWithTagsf(tags []string, fmt string, args ...interface{}) {
 	logger.logwithformat(WARN, tags, fmt, args...)
 }
 
-//WarnWithTags logs an WARN level message with the provided tags and provided arguments joined into a string.
+// WarnWithTags logs an WARN level message with the provided tags and provided arguments joined into a string.
 func (logger *LoggerImpl) WarnWithTags(tags []string, args ...interface{}) {
 	logger.log(WARN, tags, args...)
 }
 
-//Warnf logs an WARN level message with the no tags and formatted string.
+// Warnf logs an WARN level message with the no tags and formatted string.
 func (logger *LoggerImpl) Warnf(fmt string, args ...interface{}) {
 	logger.logwithformat(WARN, nil, fmt, args...)
 }
 
-//Warn logs an WARN level message with no tags and provided arguments joined into a string.
+// Warn logs an WARN level message with no tags and provided arguments joined into a string.
 func (logger *LoggerImpl) Warn(args ...interface{}) {
 	logger.log(WARN, nil, args...)
 }
 
-//InfoWithTagsf logs an INFO level message with the provided tags and formatted string.
+// InfoWithTagsf logs an INFO level message with the provided tags and formatted string.
 func (logger *LoggerImpl) InfoWithTagsf(tags []string, fmt string, args ...interface{}) {
 	logger.logwithformat(INFO, tags, fmt, args...)
 }
 
-//InfoWithTags logs an INFO level message with the provided tags and provided arguments joined into a string.
+// InfoWithTags logs an INFO level message with the provided tags and provided arguments joined into a string.
 func (logger *LoggerImpl) InfoWithTags(tags []string, args ...interface{}) {
 	logger.log(INFO, tags, args...)
 }
 
-//Infof logs an INFO level message with the no tags and formatted string.
+// Infof logs an INFO level message with the no tags and formatted string.
 func (logger *LoggerImpl) Infof(fmt string, args ...interface{}) {
 	logger.logwithformat(INFO, nil, fmt, args...)
 }
 
-//Info logs an INFO level message with no tags and provided arguments joined into a string.
+// Info logs an INFO level message with no tags and provided arguments joined into a string.
 func (logger *LoggerImpl) Info(args ...interface{}) {
 	logger.log(INFO, nil, args...)
 }
 
-//DebugWithTagsf logs an DEBUG level message with the provided tags and formatted string.
+// DebugWithTagsf logs an DEBUG level message with the provided tags and formatted string.
 func (logger *LoggerImpl) DebugWithTagsf(tags []string, fmt string, args ...interface{}) {
 	logger.logwithformat(DEBUG, tags, fmt, args...)
 }
 
-//DebugWithTags logs an DEBUG level message with the provided tags and provided arguments joined into a string.
+// DebugWithTags logs an DEBUG level message with the provided tags and provided arguments joined into a string.
 func (logger *LoggerImpl) DebugWithTags(tags []string, args ...interface{}) {
 	logger.log(DEBUG, tags, args...)
 }
 
-//Debugf logs an DEBUG level message with the no tags and formatted string.
+// Debugf logs an DEBUG level message with the no tags and formatted string.
 func (logger *LoggerImpl) Debugf(fmt string, args ...interface{}) {
 	logger.logwithformat(DEBUG, nil, fmt, args...)
 }
 
-//Debug logs an DEBUG level message with no tags and provided arguments joined into a string.
+// Debug logs an DEBUG level message with no tags and provided arguments joined into a string.
 func (logger *LoggerImpl) Debug(args ...interface{}) {
 	logger.log(DEBUG, nil, args...)
 }
 
-//VerboseWithTagsf logs an VERBOSE level message with the provided tags and formatted string.
-//Verbose messages are not buffered
+// VerboseWithTagsf logs an VERBOSE level message with the provided tags and formatted string.
+// Verbose messages are not buffered
 func (logger *LoggerImpl) VerboseWithTagsf(tags []string, fmt string, args ...interface{}) {
 	logger.logwithformat(VERBOSE, tags, fmt, args...)
 }
 
-//Verbosef logs an VERBOSE level message with the no tags and formatted string.
-//Verbose messages are not buffered
+// Verbosef logs an VERBOSE level message with the no tags and formatted string.
+// Verbose messages are not buffered
 func (logger *LoggerImpl) Verbosef(fmt string, args ...interface{}) {
 	logger.logwithformat(VERBOSE, nil, fmt, args...)
 }
 
-//ErrorWithTagsf logs an ERROR level message with the provided tags and formatted string. Uses the default logger.
+// ErrorWithTagsf logs an ERROR level message with the provided tags and formatted string. Uses the default logger.
 func ErrorWithTagsf(tags []string, fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(ERROR, tags, fmt, args...)
 }
 
-//ErrorWithTags logs an ERROR level message with the provided tags and provided arguments joined into a string. Uses the default logger.
+// ErrorWithTags logs an ERROR level message with the provided tags and provided arguments joined into a string. Uses the default logger.
 func ErrorWithTags(tags []string, args ...interface{}) {
 	defaultLogger.log(ERROR, tags, args...)
 }
 
-//Errorf logs an ERROR level message with the no tags and formatted string. Uses the default logger.
+// Errorf logs an ERROR level message with the no tags and formatted string. Uses the default logger.
 func Errorf(fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(ERROR, nil, fmt, args...)
 }
 
-//Error logs an ERROR level message with no tags and provided arguments joined into a string. Uses the default logger.
+// Error logs an ERROR level message with no tags and provided arguments joined into a string. Uses the default logger.
 func Error(args ...interface{}) {
 	defaultLogger.log(ERROR, nil, args...)
 }
 
-//WarnWithTagsf logs an WARN level message with the provided tags and formatted string. Uses the default logger.
+// WarnWithTagsf logs an WARN level message with the provided tags and formatted string. Uses the default logger.
 func WarnWithTagsf(tags []string, fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(WARN, tags, fmt, args...)
 }
 
-//WarnWithTags logs an WARN level message with the provided tags and provided arguments joined into a string. Uses the default logger.
+// WarnWithTags logs an WARN level message with the provided tags and provided arguments joined into a string. Uses the default logger.
 func WarnWithTags(tags []string, args ...interface{}) {
 	defaultLogger.log(WARN, tags, args...)
 }
 
-//Warnf logs an WARN level message with the no tags and formatted string. Uses the default logger.
+// Warnf logs an WARN level message with the no tags and formatted string. Uses the default logger.
 func Warnf(fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(WARN, nil, fmt, args...)
 }
 
-//Warn logs an WARN level message with no tags and provided arguments joined into a string. Uses the default logger.
+// Warn logs an WARN level message with no tags and provided arguments joined into a string. Uses the default logger.
 func Warn(args ...interface{}) {
 	defaultLogger.log(WARN, nil, args...)
 }
 
-//InfoWithTagsf logs an INFO level message with the provided tags and formatted string. Uses the default logger.
+// InfoWithTagsf logs an INFO level message with the provided tags and formatted string. Uses the default logger.
 func InfoWithTagsf(tags []string, fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(INFO, tags, fmt, args...)
 }
 
-//InfoWithTags logs an INFO level message with the provided tags and provided arguments joined into a string. Uses the default logger.
+// InfoWithTags logs an INFO level message with the provided tags and provided arguments joined into a string. Uses the default logger.
 func InfoWithTags(tags []string, args ...interface{}) {
 	defaultLogger.log(INFO, tags, args...)
 }
 
-//Infof logs an INFO level message with the no tags and formatted string. Uses the default logger.
+// Infof logs an INFO level message with the no tags and formatted string. Uses the default logger.
 func Infof(fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(INFO, nil, fmt, args...)
 }
 
-//Info logs an INFO level message with no tags and provided arguments joined into a string. Uses the default logger.
+// Info logs an INFO level message with no tags and provided arguments joined into a string. Uses the default logger.
 func Info(args ...interface{}) {
 	defaultLogger.log(INFO, nil, args...)
 }
 
-//DebugWithTagsf logs an DEBUG level message with the provided tags and formatted string. Uses the default logger.
+// DebugWithTagsf logs an DEBUG level message with the provided tags and formatted string. Uses the default logger.
 func DebugWithTagsf(tags []string, fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(DEBUG, tags, fmt, args...)
 }
 
-//DebugWithTags logs an DEBUG level message with the provided tags and provided arguments joined into a string. Uses the default logger.
+// DebugWithTags logs an DEBUG level message with the provided tags and provided arguments joined into a string. Uses the default logger.
 func DebugWithTags(tags []string, args ...interface{}) {
 	defaultLogger.log(DEBUG, tags, args...)
 }
 
-//Debugf logs an DEBUG level message with the no tags and formatted string. Uses the default logger.
+// Debugf logs an DEBUG level message with the no tags and formatted string. Uses the default logger.
 func Debugf(fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(DEBUG, nil, fmt, args...)
 }
 
-//Debug logs an DEBUG level message with no tags and provided arguments joined into a string. Uses the default logger.
+// Debug logs an DEBUG level message with no tags and provided arguments joined into a string. Uses the default logger.
 func Debug(args ...interface{}) {
 	defaultLogger.log(DEBUG, nil, args...)
 }
 
-//VerboseWithTagsf logs an VERBOSE level message with the provided tags and formatted string. Uses the default logger.
-//Verbose messages are not buffered
+// VerboseWithTagsf logs an VERBOSE level message with the provided tags and formatted string. Uses the default logger.
+// Verbose messages are not buffered
 func VerboseWithTagsf(tags []string, fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(VERBOSE, tags, fmt, args...)
 }
 
-//Verbosef logs an VERBOSE level message with the no tags and formatted string. Uses the default logger.
-//Verbose messages are not buffered
+// Verbosef logs an VERBOSE level message with the no tags and formatted string. Uses the default logger.
+// Verbose messages are not buffered
 func Verbosef(fmt string, args ...interface{}) {
 	defaultLogger.logwithformat(VERBOSE, nil, fmt, args...)
 }

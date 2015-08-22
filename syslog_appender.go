@@ -6,24 +6,20 @@ import (
 	"log/syslog"
 )
 
-//SysLogAppender is the logging appender for appending to the syslog service
+// SysLogAppender is the logging appender for appending to the syslog service.
 type SysLogAppender struct {
 	BaseLogAppender
 	syslogger *syslog.Writer
 }
 
-/*
-NewSysLogAppender creates a sys log appender
-*/
+// NewSysLogAppender creates a sys log appender.
 func NewSysLogAppender() *SysLogAppender {
 	appender := new(SysLogAppender)
 	appender.level = DEFAULT
 	return appender
 }
 
-/*
-Log adds a record to the sys log
-*/
+// Log adds a record to the sys log.
 func (appender *SysLogAppender) Log(record *LogRecord) error {
 
 	if !appender.CheckLevel(record.Level) {
@@ -61,7 +57,7 @@ func (appender *SysLogAppender) Log(record *LogRecord) error {
 	return nil
 }
 
-//Close shuts down the syslog connection
+// Close shuts down the syslog connection.
 func (appender *SysLogAppender) Close() error {
 
 	if appender.syslogger != nil {

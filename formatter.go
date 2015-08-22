@@ -6,24 +6,24 @@ import (
 	"time"
 )
 
-//LogFormat is the name of a known formatting function.
+// LogFormat is the name of a known formatting function.
 type LogFormat string
 
-//MINIMAL describes a formatter that just prints the message, replays are not indicated
+// MINIMAL describes a formatter that just prints the message, replays are not indicated.
 const MINIMAL LogFormat = "minimal"
 
-//MINIMALTAGGED describes a formatter that just prints the level, tags and message, replays are not indicated
+// MINIMALTAGGED describes a formatter that just prints the level, tags and message, replays are not indicated.
 const MINIMALTAGGED LogFormat = "minimaltagged"
 
-//SIMPLE describes a formatter that just prints the date, level and message, replays are not indicated
+// SIMPLE describes a formatter that just prints the date, level and message, replays are not indicated.
 const SIMPLE LogFormat = "simple"
 
-//FULL formats messages with the date to ms accuracy, the level, tags and message. Replayed messages have a special field added.
+// FULL formats messages with the date to ms accuracy, the level, tags and message. Replayed messages have a special field added.
 const FULL LogFormat = "full"
 
-//FormatFromString converts a string name to a LogFormat. Valid
-//arguemnts include full, simple, minimaltagged and minimal. An
-//unknown string will be treated like simple.
+// FormatFromString converts a string name to a LogFormat. Valid
+// arguemnts include full, simple, minimaltagged and minimal. An
+// unknown string will be treated like simple.
 func FormatFromString(formatName string) LogFormat {
 	formatName = strings.ToLower(formatName)
 	switch formatName {
@@ -40,7 +40,7 @@ func FormatFromString(formatName string) LogFormat {
 	}
 }
 
-//GetFormatter returns the function associated with a named format.
+// GetFormatter returns the function associated with a named format.
 func GetFormatter(formatName LogFormat) LogFormatter {
 	switch formatName {
 	case FULL:
@@ -56,8 +56,8 @@ func GetFormatter(formatName LogFormat) LogFormatter {
 	}
 }
 
-//LogFormatter is a function type used to convert a log record into a string.
-//Original time is provided times when the formatter has to construct a replayed message from the buffer
+// LogFormatter is a function type used to convert a log record into a string.
+// Original time is provided times when the formatter has to construct a replayed message from the buffer.
 type LogFormatter func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string
 
 var fullFormat = func(level LogLevel, tags []string, message string, t time.Time, original time.Time) string {

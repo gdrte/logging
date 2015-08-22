@@ -13,7 +13,7 @@ type tagLevel struct {
 // A tagList holds a full set of tagLevels for a logger.
 type tagList []tagLevel
 
-// tagLists are surtable, this helps in some situations,
+// tagLists are sortable, this helps in some situations,
 // in the future we may provide a "fast" version of checkTagLevel
 // for presorted arrays of tags.
 func (p tagList) Len() int           { return len(p) }

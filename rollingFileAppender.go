@@ -33,7 +33,7 @@ type RollingFileAppender struct {
 	mutex         *sync.RWMutex
 }
 
-//NewRollingFileAppender is used to create a rolling file appender
+// NewRollingFileAppender is used to create a rolling file appender.
 func NewRollingFileAppender(prefix string, suffix string, maxFileSize int64, maxFiles int16) *RollingFileAppender {
 
 	if maxFiles <= 0 {
@@ -56,7 +56,7 @@ func NewRollingFileAppender(prefix string, suffix string, maxFileSize int64, max
 	return appender
 }
 
-//currentFileName should be called inside the lock
+// currentFileName should be called inside the lock.
 func (appender *RollingFileAppender) currentFileName() string {
 	return fmt.Sprintf("%v.%v", appender.prefix, appender.suffix)
 }
@@ -89,7 +89,7 @@ func (appender *RollingFileAppender) open() error {
 	return nil
 }
 
-//Close closes the current file after flushing any buffered data
+// Close closes the current file after flushing any buffered data.
 func (appender *RollingFileAppender) Close() error {
 	appender.mutex.Lock()
 	defer appender.mutex.Unlock()
@@ -109,7 +109,7 @@ func (appender *RollingFileAppender) Close() error {
 	return err
 }
 
-//needsRoll should be called inside the lock
+// needsRoll should be called inside the lock.
 func (appender *RollingFileAppender) needsRoll() bool {
 
 	if appender.maxFiles == 1 {
@@ -137,7 +137,7 @@ func (appender *RollingFileAppender) needsRoll() bool {
 	return false
 }
 
-//Roll moves the file to the next number, up to the max files.
+// Roll moves the file to the next number, up to the max files.
 func (appender *RollingFileAppender) Roll() error {
 	appender.Close()
 
@@ -160,13 +160,13 @@ func (appender *RollingFileAppender) Roll() error {
 
 		if err != nil {
 			if os.IsNotExist(err) {
-				continue //do'nt have this file yet
+				continue // do'nt have this file yet
 			} else {
 				return err
 			}
 		}
 
-		//we work backward so the only time the next file should exist is for the truly last file
+		// we work backward so the only time the next file should exist is for the truly last file
 		nextFileName := fmt.Sprintf("%v.%d.%v", appender.prefix, i+1, appender.suffix)
 		_, err = os.Stat(nextFileName)
 
@@ -188,7 +188,7 @@ func (appender *RollingFileAppender) Roll() error {
 	return nil
 }
 
-//Log a record to the current file
+// Log a record to the current file.
 func (appender *RollingFileAppender) Log(record *LogRecord) error {
 
 	if !appender.CheckLevel(record.Level) {
